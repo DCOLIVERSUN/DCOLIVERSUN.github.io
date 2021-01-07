@@ -5,7 +5,17 @@
     <description>Recent content in @Qian Sun on @Qian Sun</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>cn</language>
+    <lastBuildDate>Wed, 06 Jan 2021 20:42:47 +0800</lastBuildDate>
     <atom:link href="https://dcoliversun.github.io/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Posts</title>
+      <link>https://dcoliversun.github.io/posts/</link>
+      <pubDate>Wed, 06 Jan 2021 20:42:47 +0800</pubDate>
+      
+      <guid>https://dcoliversun.github.io/posts/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>About me</title>
@@ -14,7 +24,7 @@
       
       <guid>https://dcoliversun.github.io/about/</guid>
       <description>&lt;p&gt;&lt;img src=&#34;https://dcoliversun.github.io/images/about.jpeg&#34; alt=&#34;me&#34;&gt;&lt;/p&gt;
-&lt;h3 id=&#34;自我介绍&#34;&gt;自我介绍&lt;/h3&gt;
+&lt;h3 id=&#34;我是谁&#34;&gt;我是谁&lt;/h3&gt;
 &lt;p&gt;大家好！👏&lt;/p&gt;
 &lt;p&gt;我是孙乾。自小成长在美丽的&lt;a href=&#34;https://baike.baidu.com/item/%E5%A8%81%E6%B5%B7/210392?fr=aladdin&#34;&gt;威海&lt;/a&gt;，如今居住在北京。&lt;/p&gt;
 &lt;p&gt;现在在&lt;a href=&#34;http://www.ict.ac.cn&#34;&gt;中国科学院计算技术研究所&lt;/a&gt;，攻读计算机系统结构💻硕士学位。本科就读&lt;a href=&#34;https://www.dlmu.edu.cn&#34;&gt;大连海事大学&lt;/a&gt;，获得了工学学士学位。目前，我主要关注5G基带算法的研究与优化。待研究结束后，我将致力于软件的开发工作。&lt;/p&gt;
