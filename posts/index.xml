@@ -8,7 +8,7 @@
     <language>cn</language>
     <lastBuildDate>Fri, 08 Jan 2021 17:52:32 +0800</lastBuildDate><atom:link href="https://dcoliversun.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>自治数据管理系统</title>
+      <title>自治数据库管理系统</title>
       <link>https://dcoliversun.github.io/2021/self-driving-dmrs/</link>
       <pubDate>Fri, 08 Jan 2021 17:52:32 +0800</pubDate>
       
@@ -23,15 +23,6 @@
       
       <guid>https://dcoliversun.github.io/2021/lakehouse/</guid>
       <description>Lakehouse架构支持开放的数据格式、机器学习，提供卓越的性能，是第三代数据分析平台的代表</description>
-    </item>
-    
-    <item>
-      <title>My First Post</title>
-      <link>https://dcoliversun.github.io/2020/my-first-post/</link>
-      <pubDate>Fri, 25 Dec 2020 19:08:35 +0800</pubDate>
-      
-      <guid>https://dcoliversun.github.io/2020/my-first-post/</guid>
-      <description>孙乾 孙乾 孙乾 </description>
     </item>
     
   </channel>
