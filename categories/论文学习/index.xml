@@ -9,10 +9,10 @@
     <lastBuildDate>Fri, 08 Jan 2021 17:52:32 +0800</lastBuildDate><atom:link href="https://dcoliversun.github.io/categories/%E8%AE%BA%E6%96%87%E5%AD%A6%E4%B9%A0/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>自治数据库管理系统</title>
-      <link>https://dcoliversun.github.io/2021/self-driving-dmrs/</link>
+      <link>https://dcoliversun.github.io/2021/self-driving-dbms/</link>
       <pubDate>Fri, 08 Jan 2021 17:52:32 +0800</pubDate>
       
-      <guid>https://dcoliversun.github.io/2021/self-driving-dmrs/</guid>
+      <guid>https://dcoliversun.github.io/2021/self-driving-dbms/</guid>
       <description>自治DBMS可以降低DBA工作负担，为企业带来数据驱动决策的便利。该文提出Peloton DBMS自治架构，并认为在深度神经网络、新硬件和高性能数据库架构下，自治DBMS是可以实现的</description>
     </item>
     
