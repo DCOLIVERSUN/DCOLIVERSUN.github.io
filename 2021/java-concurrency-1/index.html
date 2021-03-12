@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  
+  
+  
+  
+  
+  <link rel="prev" href="https://dcoliversun.github.io/2021/six-thinking-hats/" />
+  
+  <link rel="canonical" href="https://dcoliversun.github.io/2021/java-concurrency-1/" />
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Executor与线程池 | @Qian Sun
+       
+  </title>
+  <meta name="title" content="Executor与线程池 | @Qian Sun">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Executor与线程池"/>
+<meta name="twitter:description" content="本文介绍了Executor框架，框架采用了任务提交、执行的解耦方案。为了让该方案适配不同场景，需要将多种因素考虑进执行策略中。不同的执行策略也衍生出不同的线程池，我们在使用前需要分析真实环境去选择适当的线程池。线程池异步执行多个任务，导致任务可能处于不同的状态。为了管理整个线程池的生命周期，ExecutorService提供了多种方法，一般采取awaitTermination、shutdown组合使用的方式，达到同步关闭的效果。最后，本文介绍了ScheduledThreadPool在延迟任务、周期任务的优越性，如果构建调度服务，可以采用DelayQueue。"/>
+
+  <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Executor与线程池",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https:\/\/dcoliversun.github.io\/2021\/java-concurrency-1\/"
+  },
+  "image": {
+    "@type": "ImageObject",
+    "url": "https:\/\/dcoliversun.github.io\/cover.png",
+    "width":  800 ,
+    "height":  600 
+  },
+  "genre": "posts",
+  "keywords": "Java, 并发",
+  "wordcount":  69 ,
+  "url": "https:\/\/dcoliversun.github.io\/2021\/java-concurrency-1\/",
+  "datePublished": "2021-03-12T19:48:22\u002b08:00",
+  "dateModified": "2021-03-12T19:48:22\u002b08:00",
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "孙乾",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https:\/\/dcoliversun.github.io\/logo.png",
+      "width":  127 ,
+      "height":  40 
+    }
+  },
+  "author": {
+    "@type": "Person",
+    "name": "孙乾"
+  },
+  "description": ""
+}
+</script>
+</head>
+
+  
+
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="https://dcoliversun.github.io">@Qian Sun</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about" title="">About</a>
+                
+                <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-sun"></i></a>&nbsp;<a href="https://dcoliversun.github.io">@Qian Sun</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp">
+    <header class="post-header">
+        <h1 class="post-title">Executor与线程池</h1>
+        <div class="post-meta">
+            Written by <a href="https://dcoliversun.github.io" rel="author">Qian Sun</a> with ♥ 
+                <span class="post-time">
+                    on <time datetime=2021-03-12 >12 March 2021</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://dcoliversun.github.io/categories/java/"> Java </a>
+                        
+                </span>
+                <i class="iconfont icon-timer"></i>
+                1 min
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="executor框架">Executor框架</h2>
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/202003/Java-concurrency-1/image1.jpg" alt="" class="lazyload"><figcaption class="image-caption"></figcaption></figure></p>
+<p>我们将执行的逻辑工作单元抽象为任务，那么线程就是使任务异步执行的容器。如果把所有任务放在单个线程执行，将对应用的响应性和吞吐量造成灾难性影响。</p>
+<p>为每个任务分配一个线程似乎是不错的解决方案，不过这对资源管理有着较高的要求。线程池缓解了这一压力，它承担了管理线程工作。<code>java.util.concurrent</code>提供了一种灵活的线程池作为Executor框架的一部分。</p>
+<p>在Java类库中，任务执行的主要抽象不是Thread，而是Executor。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Executor</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">execute</span> <span style="color:#f92672">(</span>Runnable command<span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>Executor为灵活且强大的异步任务执行框架提供了基础，为任务的提交与执行提供了标准的方法，将两个过程解耦开来。此外，Executor实现了对生命周期的支持，以及监控管理等机制。</p>
+<p>Executor基于生产者-消费者模式，提交任务的操作相当于生产者，执行任务的操作类似于消费者。反之，如果想实现简单的生产消费模型，可以采用Executor实现。</p>
+<h2 id="执行策略">执行策略</h2>
+<p>Executor框架需要设计一套任务执行策略，以解决多任务执行混乱的问题。执行策略包括以下内容：</p>
+<ul>
+<li>在什么线程中执行任务？</li>
+<li>任务按照什么顺序执行（FIFO、LIFO、优先级）？</li>
+<li>有多少个任务能并发执行？</li>
+<li>在队列中有多少个任务在等待执行？</li>
+<li>如果系统需要拒绝一个任务，应该选择哪个任务？如何通知应用有任务被拒绝？</li>
+<li>在执行一个任务前后，应该进行哪些动作？</li>
+</ul>
+<h2 id="线程池">线程池</h2>
+<p>线程池是管理诸多线程的资源池，依靠任务保持所有等待执行的任务。工作者线程（Work Thread）的任务很简单：从工作队列获取一个任务，执行任务，然后返回线程池并等待下一个任务。</p>
+<p>为每个任务分配一个线程可能引入线程新建、销毁的开销，不如让多个任务在线程池中执行。通过重用现有的线程可以分摊多个线程的开销。此外，任务不会因等待线程创建而延迟执行，提升整体响应性。用户可以通过配置线程池大小，创建足够多的线程使处理器保持忙碌状态，还可防止多线程相互竞争资源而使应用程序耗尽内存或失败。</p>
+<h3 id="newfixedthreadpool">newFixedThreadPool</h3>
+<p>newFixedThreadPool是拥有固定数量线程的线程池，每当提交一个任务就创建一个线程，直到达到最大数量。如果某个线程因异常结束，那么线程池会补充一个新线程。</p>
+<h3 id="newcachedthreadpool">newCachedThreadPool</h3>
+<p>newCachedThreadPool是可缓存的线程池，如果线程池当前规模超过处理需求，将回收空闲线程，而当需求增加时，可以添加新线程。线程池规模不存在任何限制。</p>
+<h3 id="newsinglethreadexecutor">newSingleThreadExecutor</h3>
+<p>newSingleThreadExecutor是单线程的Executor，如果线程因异常结束，newSingleThreadExecutor会创建另一个线程来替代。任务按照队列顺序而执行。</p>
+<h3 id="newscheduledthreadpool">newScheduledThreadPool</h3>
+<p>newScheduledThreadPool的线程数量也是固定的，但可以以延迟或定时方式执行任务。</p>
+<h2 id="executor的生命周期">Executor的生命周期</h2>
+<p>Executor通常会创建线程来执行任务，只有当所有线程全部终止后才会退出，如果无法正确关闭Executor，JVM将无法结束。</p>
+<p>因为Executor以异步方式执行任务，可能引发任务状态不同步的问题。同一时刻，不同任务可能处于执行、完成、等待执行三个状态。为了解决执行任务的生命周期问题，Executor扩展了ExecutorService接口，添加了一些用于生命周期管理的方法。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">ExecutorService</span> <span style="color:#66d9ef">extends</span> Executor <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">shutdown</span><span style="color:#f92672">();</span>
+  List<span style="color:#f92672">&lt;</span>Runnable<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">shutdownNow</span><span style="color:#f92672">();</span>
+  <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isShutdown</span><span style="color:#f92672">();</span>
+  <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isTerminated</span><span style="color:#f92672">();</span>
+  <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">awaitTermination</span><span style="color:#f92672">(</span><span style="color:#66d9ef">long</span> timeout<span style="color:#f92672">,</span> TimeUnit unit<span style="color:#f92672">)</span>
+    <span style="color:#66d9ef">throws</span> InterruptedException<span style="color:#f92672">;</span>
+  <span style="color:#75715e">// ...
+</span><span style="color:#75715e"></span><span style="color:#f92672">}</span>
+</code></pre></div><p>ExecutorService的生命周期有三种状态：运行、关闭和已终止。shutdown方法将平缓地关闭ExecutorService：不再接受新任务，同时等待已经提交的任务执行完成——包括还未开始执行的任务。shutdownNow方法将粗暴地关闭ExecutorService：直接取消所有执行中的任务，并且不再启动队列中尚未开始执行的任务。</p>
+<p>awaitTermination方式可以等待ExecutorService到达终止状态，或者调用isTerminated来轮询ExecutorService是否已经终止。通常在调用awaitTermination方法后立即调用shutdown，从而产生同步关闭的效果。</p>
+<h2 id="延迟任务与周期任务">延迟任务与周期任务</h2>
+<p>Timer类负责管理延迟任务以及周期任务。但Timer类支持的是基于绝对时间的调度机制，对系统时钟变化的容忍度很低，存在天然缺陷。ScheduledThreadPool只支持基于相对时间的调度，可以通过ScheduledThreadPool的构造函数或newScheduledThreadPool工厂方法来创建该类的对象。</p>
+<p>如果构建调度服务，可以使用DelayQueue，它实现了BlockingQueue，并为ScheduledThreadPoolExecutor提供调度功能。DelayQueue管理着一组Delayed对象。每个Delayed对象都有一个相应的延迟时间。</p>
+<h2 id="总结">总结</h2>
+<p>本文一开始介绍了Executor框架，框架采用了任务提交、执行的解耦方案。为了让该方案适配不同场景，需要将多种因素考虑进执行策略中。不同的执行策略也衍生出不同的线程池，我们在使用前需要分析真实环境去选择适当的线程池。线程池异步执行多个任务，导致任务可能处于不同的状态。为了管理整个线程池的生命周期，ExecutorService提供了多种方法，一般采取awaitTermination、shutdown组合使用的方式，达到同步关闭的效果。最后，本文介绍了ScheduledThreadPool在延迟任务、周期任务的优越性，如果构建调度服务，可以采用DelayQueue。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>Qian Sun </span>
+                </p>
+            
+           
+            <p class="copyright-item">
+                    <span>Words:</span>
+                   <span>69</span>
+            </p>
+            
+            <p class="copyright-item">
+                
+                <span>Share:</span>
+                <span>
+
+      
+        <a href="//twitter.com/share?url=https%3a%2f%2fdcoliversun.github.io%2f2021%2fjava-concurrency-1%2f&amp;text=Executor%e4%b8%8e%e7%ba%bf%e7%a8%8b%e6%b1%a0&amp;via=" target="_blank" title="Share on Twitter">
+          <i class="iconfont icon-twitter"></i>
+        </a>
+        
+      
+      
+        <a href="//www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fdcoliversun.github.io%2f2021%2fjava-concurrency-1%2f" target="_blank" title="Share on Facebook">
+          <i class="iconfont icon-facebook"></i>
+        </a>
+        
+      
+      
+      
+      
+        <a href="//www.linkedin.com/shareArticle?url=https%3a%2f%2fdcoliversun.github.io%2f2021%2fjava-concurrency-1%2f&amp;title=Executor%e4%b8%8e%e7%ba%bf%e7%a8%8b%e6%b1%a0" target="_blank" title="Share on LinkedIn">
+          <i class="iconfont icon-linkedin"></i>
+        </a>
+        
+      
+      
+        
+      
+        
+      
+
+          
+
+          
+
+          
+
+          
+        <a href="//service.weibo.com/share/share.php?url=https%3a%2f%2fdcoliversun.github.io%2f2021%2fjava-concurrency-1%2f&amp;appkey=&amp;title=Executor%e4%b8%8e%e7%ba%bf%e7%a8%8b%e6%b1%a0" target="_blank" title="Share on Douban ">
+            <i class="iconfont icon-weibo"></i>
+          </a>
+          
+</span>
+                
+            </p>
+
+             
+            <p class="copyright-item">
+                Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>
+            </p>
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+            <section>
+            <i class="iconfont icon-icon-tag"></i>Tag: 
+            
+            <span class="tag"><a href="https://dcoliversun.github.io/tags/java/">
+                    #Java</a></span>
+            
+            <span class="tag"><a href="https://dcoliversun.github.io/tags/%E5%B9%B6%E5%8F%91/">
+                    #并发</a></span>
+            
+            </section>
+        
+        <section>
+                <a href="javascript:window.history.back();">Back</a></span> · 
+                <span><a href="https://dcoliversun.github.io">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://dcoliversun.github.io/2021/six-thinking-hats/" class="prev" rel="prev" title="《六顶思考帽》读书笔记"><i class="iconfont icon-dajiantou"></i>&nbsp;《六顶思考帽》读书笔记</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+          <div id="disqus_thread"></div>
+  <script type="text/javascript">
+      (function() {
+          
+          
+          if (window.location.hostname == "localhost")
+              return;
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          var disqus_shortname = 'yourdiscussshortname';
+          dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="https://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+ 
+
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2020 - 2021</span>
+        
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://dcoliversun.github.io">Qian Sun</a> | </span>
+         
+
+		  <span>Crafted with ❤️ by <a href="https://github.com/Fastbyte01/KeepIt" target="_blank" rel="external nofollow noopener noreffer">KeepIt</a> & <a href="https://gohugo.io/" target="_blank" rel="external nofollow noopener noreffer">Hugo</a></span>
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    <link crossorigin="anonymous" integrity="sha384-yziQACfvCVwLqVFLqkWBYRO3XeA4EqzfXKGwaWnenYn5XzqfJFlFdKEmvutIQdKb" href="https://lib.baomitu.com/lightgallery/1.6.12/css/lightgallery.min.css" rel="stylesheet">
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+
+
+
+
+     </div>
+  </body>
+</html>
